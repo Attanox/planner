@@ -1,0 +1,193 @@
+# import TableResult from "./shared"
+
+query GetFilteredResults($project_ids: [ID]!, $user_ids: [ID]!) {
+	resultsByProjectAndUser(project_ids: $project_ids, user_ids: $user_ids) {
+		id
+		title
+	}
+}
+
+query GetAllResults {
+	results {
+		...TableResult
+	}
+}
+
+query GetPhases($result_id: ID!) {
+	resultById(id: $result_id) {
+		phases {
+			id
+			name
+			description
+			date_begin
+			date_end
+		}
+	}
+}
+
+query GetCoauthors($result_id: ID!) {
+	resultById(id: $result_id) {
+		coauthors {
+			user {
+				id
+				name
+			}
+		}
+	}
+}
+
+query GetKeywords($result_id: ID!) {
+	resultById(id: $result_id) {
+		tags {
+			id
+			name
+		}
+	}
+}
+
+query GetResult($id: ID!) {
+	resultById(id: $id) {
+		resultCategory {
+			id
+		}
+		id
+		title
+		status
+		comment
+		author {
+			id
+			name
+		}
+		type {
+			id
+		}
+		tags {
+			id
+			name
+		}
+		projects {
+			project {
+				id
+				name
+				short_name
+			}
+		}
+	}
+}
+
+query GetResultDetail($id: ID!) {
+	resultById(id: $id) {
+		resultCategory {
+			id
+		}
+		id
+		title
+		comment
+		status
+		type {
+			id
+			name
+		}
+		resultCategory {
+			id
+			acronym
+		}
+		projects {
+			project {
+				id
+				name
+				short_name
+			}
+		}
+		author {
+			email
+			id
+			name
+		}
+		coauthors {
+			user {
+				email
+				id
+				name
+			}
+		}
+		phases {
+			date_begin
+			date_end
+			description
+			id
+			name
+			users {
+				note
+				user {
+					email
+					id
+					name
+				}
+			}
+		}
+	}
+}
+
+mutation CreateResult(
+	$title: String!
+	$status: Status!
+	$comment: String
+	$type_id: ID!
+	$result_category_id: ID
+	$author: ID!
+) {
+	createResult(
+		input: {
+			title: $title
+			comment: $comment
+			status: $status
+			type_id: $type_id
+			result_category_id: $result_category_id
+			author: $author
+		}
+	) {
+		id
+	}
+}
+
+mutation UpdateResult(
+	$id: ID!
+	$title: String!
+	$status: Status
+	$comment: String
+	$type_id: ID
+	$result_category_id: ID
+	$author: ID
+) {
+	updateResult(
+		input: {
+			id: $id
+			title: $title
+			comment: $comment
+			status: $status
+			type_id: $type_id
+			result_category_id: $result_category_id
+			author: $author
+		}
+	) {
+		id
+	}
+}
+mutation DeleteResult($id: ID!) {
+	removeResult(id: $id) {
+		id
+	}
+}
+
+mutation UpdateAuthor($id: ID!, $author: ID!) {
+	updateAuthor(id: $id, author: $author) {
+		id
+	}
+}
+
+mutation UpdateResultSyncTags($result_id: ID!, $tag_ids: [ID!]!) {
+	updateResultSyncTags(result_id: $result_id, tag_ids: $tag_ids) {
+		id
+	}
+}

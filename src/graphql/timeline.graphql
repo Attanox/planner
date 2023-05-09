@@ -1,0 +1,99 @@
+fragment Result on Result {
+	projects {
+		id
+	}
+	phases {
+		created_at
+		date_begin
+		date_end
+		description
+		id
+		name
+		description
+		users {
+			user {
+				email
+				id
+				name
+			}
+		}
+	}
+	id
+	title
+	author {
+		email
+		name
+		id
+	}
+	resultCategory {
+		acronym
+		id
+		note
+		type
+		rank {
+			id
+			name
+		}
+		url
+	}
+}
+
+fragment MainProject on Project {
+	id
+	color {
+		hex
+		id
+	}
+	date_begin
+	date_end
+	milestones {
+		date
+		description
+		id
+		name
+	}
+	users {
+		id
+		user {
+			id
+			name
+			email
+		}
+	}
+	name
+	short_name
+	results {
+		result {
+			author {
+				id
+			}
+			coauthors {
+				id
+				user {
+					id
+				}
+			}
+			...Result
+		}
+	}
+}
+
+query GetTimelineProjects {
+	projects {
+		...MainProject
+	}
+}
+
+query GetTimelineProjectsByUserId($user_id: ID!) {
+	userProjectByUserId(user_id: $user_id) {
+		project {
+			...MainProject
+		}
+	}
+}
+
+mutation FilterTimelineProjects($search_text: String!) {
+	filterTimelineProjects(search_text: $search_text) {
+		...MainProject
+	}
+}

@@ -1,0 +1,36 @@
+query GetTags {
+	tags {
+		id
+		name
+	}
+}
+
+mutation CreateTag($name: String!) {
+	createTag(name: $name) {
+		id
+	}
+}
+
+mutation CreateTags($names: [String!]!, $result_id: ID!) {
+	createTags(names: $names, result_id: $result_id) {
+		id
+	}
+}
+
+mutation UpdateTag($id: ID!, $name: String!) {
+	updateTag(id: $id, name: $name) {
+		id
+	}
+}
+
+mutation RemoveTag($id: ID!) {
+	removeTag(id: $id) {
+		id
+	}
+}
+
+mutation CreateTagAttachResult($name: String!, $result_id: ID!) {
+	createTagAttachResult(name: $name, result_id: $result_id) {
+		id
+	}
+}

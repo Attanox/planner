@@ -1,0 +1,73 @@
+mutation CreatePhase(
+	$date_begin: DateTime!
+	$date_end: DateTime!
+	$result_id: ID!
+	$description: String
+	$name: String!
+) {
+	createPhase(
+		input: {
+			date_begin: $date_begin
+			date_end: $date_end
+			result_id: $result_id
+			description: $description
+			name: $name
+		}
+	) {
+		id
+	}
+}
+mutation UpdatePhase(
+	$id: ID!
+	$date_begin: DateTime
+	$date_end: DateTime
+	$description: String
+	$name: String
+) {
+	updatePhase(
+		input: {
+			id: $id
+			date_begin: $date_begin
+			date_end: $date_end
+			description: $description
+			name: $name
+		}
+	) {
+		id
+		date_begin
+		date_end
+		result {
+			id
+		}
+		users {
+			id
+		}
+	}
+}
+mutation RemovePhase($id: ID!) {
+	removePhase(id: $id) {
+		id
+		result {
+			id
+		}
+		users {
+			id
+		}
+	}
+}
+
+mutation RemovePhasesOfResult($result_id: ID!) {
+	removePhasesByResult(result_id: $result_id) {
+		id
+	}
+}
+
+query GetPhase($id: ID!) {
+	phaseById(id: $id) {
+		id
+		date_begin
+		date_end
+		description
+		name
+	}
+}

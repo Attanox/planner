@@ -1,0 +1,51 @@
+mutation Login($email: String!, $password: String!, $stay: Boolean!) {
+	login(email: $email, password: $password, stay: $stay)
+}
+
+mutation Logout {
+	logout
+}
+
+mutation Register(
+	$email: String!
+	$first_name: String!
+	$last_name: String!
+	$status: UserStatus!
+	$password: String!
+) {
+	register(
+		email: $email
+		first_name: $first_name
+		last_name: $last_name
+		status: $status
+		password: $password
+	) {
+		id
+	}
+}
+
+mutation ResetPassword($oldPassword: String!, $newPassword: String!) {
+	resetPassword(newPassword: $newPassword, oldPassword: $oldPassword) {
+		id
+	}
+}
+
+query GetLoggedUser {
+	me {
+		id
+		name
+		email
+		role {
+			id
+		}
+		projects {
+			occupancy
+			role {
+				id
+			}
+			project {
+				id
+			}
+		}
+	}
+}

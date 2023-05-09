@@ -1,0 +1,52 @@
+query GetResultCategories {
+	resultCategories(trash: false) {
+		acronym
+		id
+		note
+		rank {
+			id
+			name
+		}
+		results {
+			id
+			title
+		}
+		type
+		url
+	}
+}
+
+mutation CreateResultCategory(
+	$url: String!
+	$acronym: String!
+	$note: String
+	$type: ResultCategoryType!
+	$rank_id: ID!
+) {
+	createResultCategory(
+		input: { url: $url, acronym: $acronym, note: $note, type: $type, rank_id: $rank_id }
+	) {
+		id
+	}
+}
+
+mutation UpdateResultCategory(
+	$id: ID!
+	$url: String
+	$acronym: String
+	$note: String
+	$type: ResultCategoryType
+	$rank_id: ID
+) {
+	updateResultCategory(
+		input: { id: $id, url: $url, acronym: $acronym, note: $note, type: $type, rank_id: $rank_id }
+	) {
+		id
+	}
+}
+
+mutation RemoveResultCategory($id: ID!) {
+	removeResultCategory(id: $id) {
+		id
+	}
+}

@@ -1,0 +1,21 @@
+fragment TableResult on Result {
+	id
+	author {
+		name
+		id
+		email
+	}
+	coauthors {
+		id
+	}
+	title
+	status
+	type {
+		id
+		name
+	}
+	phases {
+		date_begin
+		date_end
+	}
+}

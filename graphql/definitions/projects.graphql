@@ -1,0 +1,41 @@
+type Project {
+	id: ID!
+	name: String!
+	date_begin: DateTime!
+	date_end: DateTime!
+	color: ProjectColor! @belongsTo
+	code: String!
+	short_name: String!
+	solver: User! @belongsTo
+	users: [UserProject]! @hasMany
+	milestones: [Milestone]! @hasMany
+	results: [ResultProject]! @hasMany
+}
+
+type ProjectColor {
+	id: ID!
+	hex: String!
+	created_at: DateTime!
+	updated_at: DateTime!
+}
+
+type UserProject {
+	id: ID!
+	occupancy: Int!
+	project: Project! @belongsTo
+	user: User! @belongsTo
+	role: UserProjectRole @hasOne
+}
+
+type UserProjectRole {
+	id: ID!
+	user: UserProject! @belongsTo
+}
+
+type Milestone {
+	id: ID!
+	name: String!
+	date: DateTime!
+	description: String
+	project: Project! @belongsTo
+}

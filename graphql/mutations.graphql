@@ -1,0 +1,426 @@
+input CreateResultInput {
+	title: String!
+	type_id: ID!
+	status: Status!
+	comment: String
+	result_category_id: ID
+	author: ID!
+}
+
+input UpdateResultInput {
+	id: ID!
+	title: String
+	type_id: ID
+	status: Status
+	comment: String
+	result_category_id: ID
+	author: ID
+}
+
+input CreateUserResultInput {
+	date_begin: DateTime!
+	date_end: DateTime!
+	result_id: ID!
+	user_id: ID!
+}
+
+input CreateCoAuthorInput {
+	result_id: ID!
+	user_id: ID!
+}
+
+input CreatePhaseInput {
+	date_begin: DateTime!
+	date_end: DateTime!
+	result_id: ID!
+	description: String
+	name: String!
+}
+
+input UpdatePhaseInput {
+	id: ID!
+	name: String
+	description: String
+	date_begin: DateTime
+	date_end: DateTime
+}
+
+input CreateCoAuthorInput {
+	result_id: ID!
+	user_id: ID!
+}
+
+input CreateUserResultInput {
+	result_id: ID!
+	user_id: ID!
+	date_begin: DateTime!
+	date_end: DateTime!
+}
+
+input UpdateUserResultInput {
+	result_id: ID!
+	user_id: ID!
+	date_begin: DateTime
+	date_end: DateTime
+}
+
+input CreateInvolvedUserInput {
+	user_id: ID!
+	phase_id: ID!
+	note: String
+}
+
+input CreateResultProjectInput {
+	result_id: ID!
+	project_id: ID!
+}
+
+input UpdateInvolvedUserInput {
+	id: ID!
+	note: String
+}
+
+input CreateUserProjectInput {
+	project_id: ID!
+	user_id: ID!
+	occupancy: Int!
+}
+
+input CreateMilestoneInput {
+	name: String!
+	project_id: ID!
+	date: DateTime!
+	description: String
+}
+
+input UpdateMilestoneInput {
+	id: ID!
+	name: String
+	date: DateTime
+	description: String
+}
+
+input CreateProjectInput {
+	name: String!
+	date_begin: DateTime!
+	date_end: DateTime!
+	projects_color_set_id: ID!
+	short_name: String!
+	code: String!
+	solver: ID!
+}
+
+input UpdateProjectInput {
+	id: ID!
+	name: String
+	date_begin: DateTime
+	date_end: DateTime
+	projects_color_set_id: ID
+	short_name: String
+	code: String
+	solver: ID
+}
+
+input CreateResultCategoryInput {
+	url: String!
+	acronym: String!
+	note: String
+	type: ResultCategoryType!
+	rank_id: ID!
+}
+
+input UpdateResultCategoryInput {
+	id: ID!
+	url: String
+	acronym: String
+	note: String
+	type: ResultCategoryType
+	rank_id: ID
+}
+
+# Login mutation
+type Mutation {
+	login(email: String!, password: String!, stay: Boolean!): String @field(resolver: "AuthMutator")
+	register(
+		email: String!
+		first_name: String!
+		last_name: String!
+		status: UserStatus!
+		password: String!
+	): User @field(resolver: "RegisterMutator")
+}
+
+# Guarded mutations with api
+# States of policy:
+# 1 - everyone
+# 2 - group for author, co-author, admin and project-admin
+# 3 - group for author, admin and project-admin
+# 4 - group for author, co-author, admin, project-admin and related user
+# 5 - group for admin and project-admin
+# 6 - group for admins
+extend type Mutation @middleware(checks: ["auth:api", "blocked"]) {
+	# Remove token
+	# 1
+	logout: Boolean! @field(resolver: "LogoutMutator")
+
+	# 1
+	resetPassword(oldPassword: String!, newPassword: String!): User
+		@field(resolver: "AuthMutator@resetPassword")
+
+	# Creating result with authors id (logging 1)
+	# 1
+	createResult(input: CreateResultInput! @spread): Result @create
+	# @inject(context: "user.id", name: "author")
+
+	# 1
+	createTag(name: String!): Tag @create
+
+	# 1
+	createTagAttachResult(name: String!, result_id: ID!): Tag @field(resolver: "CreateTagMutator")
+
+	createTags(names: [String!]!, result_id: ID!): [Tag]
+		@field(resolver: "CreateTagMutator@createTags")
+
+	# 1
+	filterTimelineProjects(search_text: String!): [Project!]!
+		@field(resolver: "FilterTimelineProjectsMutator")
+
+	# Updates result (logging 2)
+	# 2
+	updateResult(input: UpdateResultInput @spread): Result @update @can(ability: "update", find: "id")
+
+	updateResultSyncTags(result_id: ID!, tag_ids: [ID!]!): Result
+		@field(resolver: "UpdateResultMutator")
+		@can(ability: "update", find: "result_id")
+
+	# Trashes result (logging 3)
+	# 2
+	removeResult(id: ID!): Result
+		@field(resolver: "TrashResultMutator")
+		@can(ability: "update", find: "id")
+
+	# Creates phase (logging 6)
+	# 2
+	createPhase(input: CreatePhaseInput @spread): Phase
+		@create
+		@can(ability: "update", model: "Result", find: "result_id")
+
+	# Update phase (logging 7)
+	# 2
+	updatePhase(input: UpdatePhaseInput @spread): Phase @update @can(ability: "update", find: "id")
+
+	# Deletes phase (logging 8) - removes all involved-users
+	# 2
+	removePhase(id: ID!): Phase
+		@field(resolver: "RemovePhaseMutator")
+		@can(ability: "update", model: "Phase", find: "id")
+
+	removePhasesByResult(result_id: ID!): [Phase]
+		@field(resolver: "RemovePhaseMutator@removeByResult")
+		@can(ability: "update", model: "Result", find: "result_id")
+
+	# Create coAuthor (logging 4)
+	# 2
+	createCoAuthor(input: CreateCoAuthorInput @spread): CoAuthor
+		@field(resolver: "CreateCoAuthorMutator")
+		@can(ability: "update", model: "Result", find: "result_id")
+
+	# Deletes coAuthor (logging 5)
+	# 2
+	removeCoAuthor(id: ID!): CoAuthor @field(resolver: "RemoveCoAuthorMutator")
+
+	# Update author of result (logging user-result log)
+	# 3
+	updateAuthor(id: ID!, author: ID!): Result @field(resolver: "UpdateAuthorMutator")
+
+	# Connect user directly to result (logging user-result log)
+	# 2
+	createUserResult(input: CreateUserResultInput @spread): UserResult
+		@field(resolver: "CreateUserResultMutator")
+		@can(ability: "update", model: "Result", find: "result_id")
+
+	# Create relation with a result by phase (logging user-result log)
+	# 2
+	createInvolvedUser(input: CreateInvolvedUserInput @spread): InvolvedUser
+		@field(resolver: "CreateInvolvedUserMutator")
+
+	# ## locked when there are relations
+	# Create connection of result and project (logging as status of a result)
+	# 3
+	createResultProject(input: CreateResultProjectInput @spread): ResultProject
+		@field(resolver: "CreateResultProjectMutator")
+
+	# Remove connection with project (logging as status of a result)
+	# 3
+	removeResultProject(id: ID!): Boolean! @field(resolver: "RemoveResultProjectMutator")
+
+	# Update involved-user (logging user-result log)
+	# 4
+	updateInvolvedUser(input: UpdateInvolvedUserInput @spread): InvolvedUser
+		@field(resolver: "UpdateInvolvedUserMutator")
+
+	# Update involved-user (logging user-result log)
+	# 4
+	updateUserResult(input: UpdateUserResultInput @spread): [UserResult!]!
+		@field(resolver: "UpdateUserResultMutator")
+
+	# Remove connection from phase (logging user-result log)
+	# 4
+	removeInvolvedUser(id: ID!): Boolean! @field(resolver: "RemoveInvolvedUserMutator")
+
+	# Remove connection from result (logging user-result log)
+	# 4
+	removeUserResult(user_id: ID!, result_id: ID!): Boolean!
+		@field(resolver: "RemoveUserResultMutator")
+
+	# Add user to project (logging 1)
+	# 5
+	createUserProject(input: CreateUserProjectInput @spread): UserProject
+		@create
+		@can(ability: "update", model: "Project", find: "project_id")
+
+	# Edit occupancy (logging 2)
+	# 5
+	updateUserProject(id: ID!, occupancy: Int): UserProject
+		@update
+		@can(ability: "update", find: "id")
+
+	# Create milestone (logging 1)
+	# 5
+	createMilestone(input: CreateMilestoneInput @spread): Milestone
+		@create
+		@can(ability: "update", model: "Project", find: "project_id")
+
+	# Update a milestone (logging 2)
+	# 5
+	updateMilestone(input: UpdateMilestoneInput @spread): Milestone
+		@update
+		@can(ability: "update", find: "id")
+
+	# Trash user from project (logging 3)
+	# 5
+	removeUserProject(id: ID!): UserProject @delete @can(ability: "update", find: "id")
+
+	# Trash milestone (logging 3)
+	# 5
+	removeMilestone(id: ID!): Milestone @delete @can(ability: "update", find: "id")
+
+	# Create project (logging 1)
+	# 6
+	createProject(input: CreateProjectInput @spread): Project @create @can(ability: "isAdmin")
+
+	# Update project (logging 2)
+	# 6
+	updateProject(input: UpdateProjectInput @spread): Project @update @can(ability: "isAdmin")
+
+	# Create project color (no log - timestamps)
+	# 6
+	createProjectColor(hex: String!): ProjectColor @create @can(ability: "isAdmin")
+
+	# Update project color (no log - timestamps)
+	# 6
+	updateProjectColor(id: ID!, hex: String): ProjectColor @update @can(ability: "isAdmin")
+
+	# Add user to project (logging 4)
+	# 6
+	createUserProjectRole(user_project_id: ID!): UserProjectRole @create @can(ability: "isAdmin")
+
+	# Remove user from project (logging 5)
+	# 6
+	removeUserProjectRole(id: ID!): Boolean!
+		@field(resolver: "RemoveUserProjectRoleMutator")
+		@can(ability: "isAdmin", model: "UserProjectRole")
+
+	# Remove project-color (lock on related) (no log - timestamps)
+	# 6
+	removeProjectColor(id: ID!): Boolean!
+		@field(resolver: "RemoveProjectColorMutator")
+		@can(ability: "isAdmin", model: "ProjectColor")
+
+	# Trash project (trash means invisible in this case) (logging 3)
+	# 6
+	removeProject(id: ID!): Project @field(resolver: "RemoveProjectMutator") @can(ability: "isAdmin")
+
+	# Create result-category (logging 1)
+	# 6
+	createResultCategory(input: CreateResultCategoryInput @spread): ResultCategory
+		@create
+		@can(ability: "isAdmin")
+
+	# Update result-category (logging 2)
+	# 6
+	updateResultCategory(input: UpdateResultCategoryInput @spread): ResultCategory
+		@update
+		@can(ability: "isAdmin")
+
+	# Create type (no log - timestamps)
+	# 6
+	createType(name: String!, description: String): Type @create @can(ability: "isAdmin")
+
+	# Update type (no log - timestamps)
+	# 6
+	updateType(id: ID!, name: String, description: String): Type @update @can(ability: "isAdmin")
+
+	# 6
+	updateTag(id: ID!, name: String): Tag @update @can(ability: "isAdmin")
+
+	# Create rank (no log - timestamps)
+	# 6
+	createRank(name: String!, note: String): Rank @create @can(ability: "isAdmin")
+
+	# Update rank (no log - timestamps)
+	# 6
+	updateRank(id: ID!, name: String, note: String): Rank @update @can(ability: "isAdmin")
+
+	# Trash result-category (lock on related) (no log - timestamps)
+	# 6
+	removeResultCategory(id: ID!): ResultCategory
+		@field(resolver: TrashResultCategoryMutator)
+		@can(ability: "isAdmin")
+
+	# Remove type (lock on related) (no log - timestamps)
+	# 6
+	removeType(id: ID!): Boolean!
+		@field(resolver: RemoveTypeMutator)
+		@can(ability: "isAdmin", model: "Type")
+
+	# 6
+	removeTag(id: ID!): Tag @delete @can(ability: "isAdmin")
+
+	# Remove rank (lock on related) (no log - timestamps)
+	# 6
+	removeRank(id: ID!): Boolean!
+		@field(resolver: RemoveRankMutator)
+		@can(ability: "isAdmin", model: "Rank")
+
+	# add new user
+	# 6
+	createUser(
+		email: String!
+		first_name: String!
+		last_name: String!
+		status: UserStatus!
+		password: String!
+	): User @field(resolver: "RegisterMutator")
+
+	# update user
+	# 6
+	updateUser(
+		id: ID!
+		first_name: String
+		last_name: String
+		status: UserStatus
+		email: String
+	): User @update @can(ability: "isAdmin")
+
+	# delete user
+	# 6
+	deleteUser(id: ID!): User @delete @can(ability: "isAdmin")
+
+	# block user
+	# 6
+	blockUser(id: ID!): User @field(resolver: "BlockMutator") @can(ability: "isAdmin")
+
+	# Trashes back
+	# Needs to be implemented
+}

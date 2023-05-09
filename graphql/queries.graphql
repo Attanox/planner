@@ -1,0 +1,98 @@
+type Query {
+	me: User @auth(guard: "api")
+}
+
+type ResultStatistics {
+	type: String
+	scheduled: Int
+	delayed: Int
+	in_progress: Int
+}
+
+type KeywordStatistics {
+	text: String!
+	value: Int!
+}
+
+type UsersAssistanceStatistics {
+	user: User!
+	assistances: [Result]!
+	assistances_count: Int!
+}
+
+type ProjectStatistics {
+	name: String
+	result_number: Int
+	involved: Int
+}
+
+type ScheduleRecord {
+	day: Date
+	value: Int
+}
+
+type UserUtilization {
+	user_name: String
+	user_id: String
+	overlapping_results: Int
+}
+
+enum NodeType {
+	RESULT
+	USER
+}
+
+type Node {
+	id: ID!
+	name: String!
+	type: NodeType!
+	email: String
+	height: Int!
+	size: Int!
+	color: String!
+}
+
+type Link {
+	source: ID!
+	target: ID!
+	distance: Int!
+}
+
+type UsersNetwork {
+	nodes: [Node!]!
+	links: [Link!]!
+}
+
+extend type Query @middleware(checks: ["auth:api", "blocked"]) {
+	results: [Result!]! @field(resolver: "Results@untrashed")
+	resultsByProjectAndUser(project_ids: [ID]!, user_ids: [ID]!): [Result!]!
+	users(orderBy: _ @orderBy(columns: ["last_name"])): [User!]! @all
+	projectUsers(project_id: ID! @eq): [UserProject!]! @all
+	projects: [Project!]! @all
+	currentUserProjects: [Project!]! @field(resolver: "Projects@currentUserProjects")
+	userById(id: ID! @eq): User @find
+	projectById(id: ID! @eq): Project @find
+	userProjectByUserId(user_id: ID! @eq): [UserProject!]! @all
+	resultById(id: ID! @eq): Result @find
+	userResultByUserId(user_id: ID! @eq, result_id: ID! @eq): [UserResult!]! @all
+	milestoneById(id: ID! @eq): Milestone @find
+	phaseById(id: ID! @eq): Phase @find
+	resultCategories(trash: Boolean! @eq): [ResultCategory!]! @all
+	ranks: [Rank!]! @all
+	types: [Type!]! @all
+	tags: [Tag!]! @all
+	resultsByStatus(status: Status @eq): [Result!]! @all
+	projects_color_sets: [ProjectColor!]! @all
+	currentUserStatistics: [ResultStatistics!]! @field(resolver: "Statistics@current_user_statistics")
+	userStatistics(user_id: ID!): [ResultStatistics!]!
+		@field(resolver: "Statistics@user_results_statistics")
+	userSchedule(user_id: ID!): [ScheduleRecord!]! @field(resolver: "Statistics@user_schedule")
+	usersUtilization: [UserUtilization] @field(resolver: "Statistics@users_utilization")
+	usersNetwork: UsersNetwork @field(resolver: "Statistics@users_network")
+	projectUsersNetwork(project_id: ID!): UsersNetwork
+		@field(resolver: "Statistics@project_users_network")
+	projectsStatistics: [ResultStatistics!]! @field(resolver: "Statistics@projects_statistics")
+	keywordsStatistics: [KeywordStatistics!]! @field(resolver: "Statistics@keywords_statistics")
+	usersAssistance(user_id: ID!): [UsersAssistanceStatistics!]!
+		@field(resolver: "Statistics@users_assistance_statistics")
+}

@@ -1,0 +1,23 @@
+query GetRanks {
+	ranks {
+		id
+		name
+		note
+	}
+}
+
+mutation CreateRank($name: String!, $note: String) {
+	createRank(name: $name, note: $note) {
+		id
+	}
+}
+
+mutation UpdateRank($id: ID!, $name: String, $note: String) {
+	updateRank(id: $id, name: $name, note: $note) {
+		id
+	}
+}
+
+mutation RemoveRank($id: ID!) {
+	removeRank(id: $id)
+}

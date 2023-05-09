@@ -1,0 +1,17 @@
+mutation CreateCoAuthor($result_id: ID!, $user_id: ID!) {
+	createCoAuthor(input: { result_id: $result_id, user_id: $user_id }) {
+		id
+	}
+}
+
+mutation RemoveCoAuthor($id: ID!) {
+	removeCoAuthor(id: $id) {
+		id
+		result {
+			id
+		}
+		user {
+			id
+		}
+	}
+}

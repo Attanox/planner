@@ -1,0 +1,106 @@
+type Type {
+	id: ID!
+	name: String!
+	description: String
+	created_at: DateTime!
+	updated_at: DateTime!
+	resultCategories: [ResultCategory]! @hasMany
+}
+
+type Tag {
+	id: ID!
+	name: String!
+	created_at: DateTime!
+	updated_at: DateTime!
+	results: [Result]! @belongsToMany
+}
+
+type Rank {
+	id: ID!
+	name: String!
+	note: String
+	created_at: DateTime!
+	updated_at: DateTime!
+	resultCategories: [ResultCategory]! @hasMany
+}
+
+type ResultCategory {
+	id: ID!
+	acronym: String!
+	url: String!
+	note: String
+	rank: Rank! @belongsTo
+	results: [Result]! @hasMany
+	type: ResultCategoryType!
+}
+
+enum ResultCategoryType {
+	conference
+	workshop
+	journal
+}
+
+type Result {
+	id: ID!
+	title: String!
+	author: User! @belongsTo
+	coauthors: [CoAuthor]! @hasMany
+	users: [UserResult]! @hasMany
+	phases: [Phase]! @hasMany
+	resultCategory: ResultCategory @belongsTo
+	projects: [ResultProject]! @hasMany
+	type: Type! @belongsTo
+	comment: String
+	status: Status
+	tags: [Tag]! @belongsToMany
+}
+
+enum Status {
+	scheduled
+	in_progress
+	delayed
+	done
+}
+
+type CoAuthor {
+	id: ID!
+	created_at: DateTime!
+	result: Result! @belongsTo
+	user: User! @belongsTo
+}
+
+type UserResult {
+	id: ID!
+	date_begin: DateTime!
+	date_end: DateTime!
+	created_at: DateTime!
+	result: Result! @belongsTo
+	user: User! @belongsTo
+}
+
+type Phase {
+	id: ID!
+	name: String!
+	date_begin: DateTime!
+	date_end: DateTime!
+	description: String
+	created_at: DateTime!
+	updated_at: DateTime!
+	result: Result! @belongsTo
+	users: [InvolvedUser]! @hasMany
+}
+
+type InvolvedUser {
+	id: ID!
+	note: String
+	created_at: DateTime!
+	user: User! @belongsTo
+	phase: Phase! @belongsTo
+}
+
+type ResultProject {
+	id: ID!
+	created_at: DateTime!
+	project: Project! @belongsTo
+	result: Result! @belongsTo
+}

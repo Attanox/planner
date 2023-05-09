@@ -1,0 +1,28 @@
+type User {
+	id: ID!
+	name: String!
+	first_name: String!
+	last_name: String!
+	status: UserStatus!
+	email: String!
+	created_at: DateTime!
+	updated_at: DateTime!
+	author: [Result]! @hasMany
+	coauthor: [CoAuthor]! @hasMany
+	phases: [InvolvedUser]! @hasMany
+	projects: [UserProject]! @hasMany
+	results: [UserResult]! @hasMany
+	role: Role @hasOne
+	block: Boolean!
+}
+
+enum UserStatus {
+	TEAM_MEMBER
+	EXTERNAL_COLLABORATOR
+	ALUMNI
+}
+
+type Role {
+	id: ID!
+	user: User! @belongsTo
+}

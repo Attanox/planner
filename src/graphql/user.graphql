@@ -1,0 +1,74 @@
+query GetAllUsers {
+	users {
+		author {
+			id
+		}
+		coauthor {
+			id
+		}
+		email
+		id
+		name
+		first_name
+		last_name
+		status
+		projects {
+			id
+			project {
+				date_end
+			}
+		}
+		results {
+			id
+		}
+		role {
+			id
+		}
+		block
+	}
+}
+query GetUser($id: ID!) {
+	userById(id: $id) {
+		id
+		email
+		first_name
+		last_name
+		status
+	}
+}
+
+mutation UpdateUser(
+	$id: ID!
+	$first_name: String
+	$last_name: String
+	$status: UserStatus
+	$email: String
+) {
+	updateUser(
+		id: $id
+		first_name: $first_name
+		last_name: $last_name
+		status: $status
+		email: $email
+	) {
+		id
+	}
+}
+
+mutation DeleteUser($id: ID!) {
+	deleteUser(id: $id) {
+		id
+	}
+}
+
+mutation CreateInvolvedUser($user_id: ID!, $phase_id: ID!, $note: String) {
+	createInvolvedUser(input: { user_id: $user_id, phase_id: $phase_id, note: $note }) {
+		id
+	}
+}
+
+mutation BlockUser($user_id: ID!) {
+	blockUser(id: $user_id) {
+		id
+	}
+}

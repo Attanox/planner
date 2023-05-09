@@ -1,0 +1,15 @@
+schema: storage/app/lighthouse-schema.graphql
+generates:
+  src/utils/__generated__/types.ts:
+    documents:
+      - 'src/**/*.graphql'
+    plugins:
+      - 'typescript'
+      - 'typescript-operations'
+      - 'typescript-resolvers'
+      - 'typescript-react-query'
+    config:
+      fetcher:
+        func: '../graphql-fetcher#fetchData'
+        isReactHook: false
+      errorType: '{ message: string | undefined, cause: string | undefined }'

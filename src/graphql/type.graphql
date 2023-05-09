@@ -1,0 +1,23 @@
+query GetTypes {
+	types {
+		id
+		name
+		description
+	}
+}
+
+mutation CreateType($name: String!, $description: String) {
+	createType(name: $name, description: $description) {
+		id
+	}
+}
+
+mutation UpdateType($id: ID!, $name: String, $description: String) {
+	updateType(id: $id, name: $name, description: $description) {
+		id
+	}
+}
+
+mutation RemoveType($id: ID!) {
+	removeType(id: $id)
+}

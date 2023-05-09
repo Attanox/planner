@@ -1,0 +1,111 @@
+# This file is a template, and might need editing before it works on your project.
+# This is a sample GitLab CI/CD configuration file that should run without any modifications.
+# It demonstrates a basic 3 stage CI/CD pipeline. Instead of real tests or scripts,
+# it uses echo commands to simulate the pipeline execution.
+#
+# A pipeline is composed of independent jobs that run scripts, grouped into stages.
+# Stages run in sequential order, but jobs within stages run in parallel.
+#
+# For more information, see: https://docs.gitlab.com/ee/ci/yaml/index.html#stages
+#
+# You can copy and paste this template into a new `.gitlab-ci.yml` file.
+# You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.
+#
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
+
+stages: # List of stages for jobs, and their order of execution
+  - check
+  - test
+  - build
+  # - deploy
+
+check:
+  stage: check
+  image: node:16
+  script:
+    - npm install
+    - npx tsc
+    - npm run code:check
+
+unit-test-job: # This job runs in the test stage.
+  stage: test # It only starts when the job in the build stage completes successfully.
+  script:
+    - echo "Running unit tests"
+
+lint-test-job: # This job also runs in the test stage.
+  stage: test # It can run at the same time as unit-test-job (in parallel).
+  script:
+    - echo "Linting code"
+
+build:
+  stage: build
+  image: node:16
+  variables:
+    CURRENT_BRANCH: "andrej-dev" # modify depending on which branch you're working
+  before_script:
+    - chmod 400 $SSH_KEY
+  script:
+    # set up git
+    - eval $(ssh-agent -s)
+    - ssh-add "$SSH_KEY"
+    - git remote set-url origin "git@gitlab.ics.muni.cz:$CI_PROJECT_PATH.git"
+    - git config --global user.email "bot@mail.muni.cz"
+    - git config --global user.name "MUNI FI"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan gitlab.ics.muni.cz >> ~/.ssh/known_hosts
+    - git checkout -B "$CURRENT_BRANCH"
+    - git rebase --abort || true # cleanups previous conflicts during rebase (if there are)
+    - git reset HEAD~1 --hard || true # remove last commit, sometimes creates conflicts (to prevent)
+    # (I don't really know how it works, but the git repository is somehow kept in CI)
+    - git rebase "origin/$CURRENT_BRANCH" "$CURRENT_BRANCH"
+    - npm install
+    - npm run build
+    - git add .
+    - |-
+      # Check if we have modifications to commit
+      CHANGES=$(git status --porcelain | wc -l)
+
+      if [ "$CHANGES" -gt "0" ]; then
+        # Show the status of files that are about to be created, updated or deleted
+        git status
+
+        # Commit all changes
+        git commit --message 'Update frontend bundle files'
+
+        git status && git stash && git fetch && git rebase "origin/$CURRENT_BRANCH"
+
+        # Update the repository and make sure to skip the pipeline create for this commit
+        git push -o ci.skip origin "$CURRENT_BRANCH"
+      fi
+
+# deploy:
+#   stage: deploy
+#   image: node:16
+#   variables:
+#     CURRENT_BRANCH: "andrej-dev" # modify depending on which branch you're working
+#   before_script:
+#     - chmod 400 $SSH_KEY
+#   script:
+#     # set up git
+#     - eval $(ssh-agent -s)
+#     - ssh-add "$SSH_KEY"
+#     - git remote set-url origin "git@gitlab.ics.muni.cz:$CI_PROJECT_PATH.git"
+#     - git config --global user.email "bot@mail.muni.cz"
+#     - git config --global user.name "MUNI FI"
+#     - mkdir -p ~/.ssh
+#     - chmod 700 ~/.ssh
+#     - ssh-keyscan gitlab.ics.muni.cz >> ~/.ssh/known_hosts
+#     - git checkout -B "$CURRENT_BRANCH"
+#     - git rebase --abort || true # cleanups previous conflicts during rebase (if there are)
+#     - git reset HEAD~1 --hard || true # remove last commit, sometimes creates conflicts (to prevent)
+#     # (I don't really know how it works, but the git repository is somehow kept in CI)
+#     - git rebase "origin/$CURRENT_BRANCH" "$CURRENT_BRANCH"
+#     - ssh -o StrictHostKeyChecking=no -i $SSH_KEY andi@172.26.5.41 "
+#         cd rtd-project-planner/ &&
+#         ls"
+
+

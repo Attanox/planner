@@ -1,0 +1,188 @@
+# import TableResult from "./shared"
+query GetProjectUsers($project_id: ID!) {
+	projectUsers(project_id: $project_id) {
+		id
+		user {
+			id
+			name
+			email
+		}
+	}
+}
+
+query GetProjectDetail($id: ID!) {
+	projectById(id: $id) {
+		id
+		name
+		date_begin
+		date_end
+		color {
+			id
+			hex
+		}
+		code
+		short_name
+		solver {
+			id
+			name
+			email
+		}
+		users {
+			id
+			occupancy
+			user {
+				id
+				name
+				email
+			}
+		}
+		milestones {
+			id
+			name
+			description
+			date
+		}
+		results {
+			result {
+				...TableResult
+			}
+		}
+	}
+}
+
+query GetProject($id: ID!) {
+	projectById(id: $id) {
+		color {
+			hex
+			id
+		}
+		id
+		name
+		solver {
+			id
+		}
+		short_name
+		code
+		date_begin
+		date_end
+	}
+}
+
+query GetProjectColors {
+	projects_color_sets {
+		hex
+		id
+	}
+}
+
+query GetAllProjects {
+	projects {
+		id
+		name
+		solver {
+			id
+		}
+		short_name
+		color {
+			id
+			hex
+		}
+	}
+}
+
+query GetCurrentUserProjects {
+	currentUserProjects {
+		id
+		name
+	}
+}
+
+query GetUserProjects($user_id: ID!) {
+	userProjectByUserId(user_id: $user_id) {
+		project {
+			id
+			name
+			short_name
+		}
+	}
+}
+
+query GetProjectUsersNetwork($project_id: ID!) {
+	projectUsersNetwork(project_id: $project_id) {
+		nodes {
+			id
+			name
+			type
+			email
+			height
+			size
+			color
+		}
+		links {
+			source
+			target
+			distance
+		}
+	}
+}
+
+mutation CreateProject(
+	$name: String!
+	$date_begin: DateTime!
+	$date_end: DateTime!
+	$projects_color_set_id: ID!
+	$code: String!
+	$short_name: String!
+	$solver: ID!
+) {
+	createProject(
+		input: {
+			name: $name
+			date_begin: $date_begin
+			date_end: $date_end
+			projects_color_set_id: $projects_color_set_id
+			code: $code
+			short_name: $short_name
+			solver: $solver
+		}
+	) {
+		id
+		solver {
+			id
+		}
+	}
+}
+mutation UpdateProject(
+	$id: ID!
+	$name: String
+	$date_begin: DateTime
+	$date_end: DateTime
+	$projects_color_set_id: ID
+	$code: String
+	$short_name: String
+	$solver: ID
+) {
+	updateProject(
+		input: {
+			id: $id
+			name: $name
+			date_begin: $date_begin
+			date_end: $date_end
+			projects_color_set_id: $projects_color_set_id
+			code: $code
+			short_name: $short_name
+			solver: $solver
+		}
+	) {
+		id
+		solver {
+			id
+		}
+	}
+}
+
+mutation DeleteProject($id: ID!) {
+	removeProject(id: $id) {
+		id
+	}
+}

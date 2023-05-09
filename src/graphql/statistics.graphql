@@ -1,0 +1,92 @@
+fragment Stats on ResultStatistics {
+	type
+	scheduled
+	delayed
+	in_progress
+}
+
+fragment ResultStats on Result {
+	id
+	title
+	status
+	tags {
+		id
+		name
+	}
+}
+
+query GetUserResultsStats($user_id: ID!) {
+	userStatistics(user_id: $user_id) {
+		...Stats
+	}
+}
+
+query GetUserSchedule($user_id: ID!) {
+	userSchedule(user_id: $user_id) {
+		day
+		value
+	}
+}
+
+query GetUsersUtilization {
+	usersUtilization {
+		user_name
+		user_id
+		overlapping_results
+	}
+}
+
+query GetUsersNetwork {
+	usersNetwork {
+		nodes {
+			id
+			name
+			email
+			type
+			color
+			height
+			size
+		}
+		links {
+			source
+			target
+			distance
+		}
+	}
+}
+
+query GetUsersAssistances($user_id: ID!) {
+	usersAssistance(user_id: $user_id) {
+		user {
+			id
+			name
+		}
+		assistances_count
+		assistances {
+			id
+			title
+		}
+	}
+}
+
+query GetResultsByStatus($status: Status) {
+	resultsByStatus(status: $status) {
+		...ResultStats
+	}
+}
+
+query GetGlobalsStats {
+	projectsStatistics {
+		...Stats
+	}
+	results {
+		...ResultStats
+	}
+}
+
+query GetKeywordStats {
+	keywordsStatistics {
+		text
+		value
+	}
+}

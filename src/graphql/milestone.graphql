@@ -1,0 +1,28 @@
+mutation CreateMilestone($date: DateTime!, $description: String, $name: String!, $project_id: ID!) {
+	createMilestone(
+		input: { date: $date, description: $description, name: $name, project_id: $project_id }
+	) {
+		id
+	}
+}
+
+mutation UpdateMilestone($id: ID!, $date: DateTime, $description: String, $name: String) {
+	updateMilestone(input: { id: $id, date: $date, description: $description, name: $name }) {
+		id
+	}
+}
+
+mutation RemoveMilestone($id: ID!) {
+	removeMilestone(id: $id) {
+		id
+	}
+}
+
+query GetMilestone($id: ID!) {
+	milestoneById(id: $id) {
+		id
+		date
+		description
+		name
+	}
+}
